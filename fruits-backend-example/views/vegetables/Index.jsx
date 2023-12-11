@@ -15,7 +15,8 @@ class Index extends React.Component {
           {vegetables.map((vegetable, i) => {
             return (
               <li>
-                The <a href={`/vegetables/${i}`}>{vegetable.name}</a> is{" "}
+                The{" "}
+                <a href={`/vegetables/${vegetable._id}`}>{vegetable.name}</a> is{" "}
                 {vegetable.color} <br></br>
                 {vegetable.readyToEat
                   ? `It is ready to eat`
