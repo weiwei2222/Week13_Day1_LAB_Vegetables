@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const methodOverride = require("method-override");
+
 const app = express();
 const Fruit = require("./models/fruit");
 const Vegetable = require("./models/vegetable");
@@ -28,6 +30,8 @@ app.use((req, res, next) => {
 //near the top, around other app.use() calls
 app.use(express.urlencoded({ extended: false }));
 
+app.use(methodOverride("_method"));
+
 app.get("/", (req, res) => {
   res.send(
     `this is my <a href='/fruits/'>fruits</a> and <a href='/vegetables/'>Vegetables</a> root route.`
@@ -41,25 +45,62 @@ app.get("/fruits/", async (req, res) => {
   } catch (err) {
     res.status(400).send(err);
   }
-  // res.render("fruits/Index", { fruits: fruits });
 });
 
 app.get("/fruits/new", (req, res) => {
   res.render("fruits/New");
 });
 
-app.post("/fruits", async (req, res) => {
+// delete fruit
+app.delete("/fruits/:id", async (req, res) => {
+  try {
+    const deletedFruit = await Fruit.findByIdAndDelete(req.params.id);
+    res.status(200).redirect("/fruits");
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+// update
+app.put("/fruits/:id", async (req, res) => {
   if (req.body.readyToEat === "on") {
-    //if checked, req.body.readyToEat is set to 'on'
     req.body.readyToEat = true;
   } else {
-    //if not checked, req.body.readyToEat is undefined
+    req.body.readyToEat = false;
+  }
+
+  try {
+    const updatedFruit = await Fruit.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).redirect(`/fruits/${req.params.id}`);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+app.post("/fruits", async (req, res) => {
+  if (req.body.readyToEat === "on") {
+    req.body.readyToEat = true;
+  } else {
     req.body.readyToEat = false;
   }
 
   try {
     const createdFruit = await Fruit.create(req.body);
     res.status(200).redirect("/fruits");
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+// edit fruit
+app.get("/fruits/:id/edit", async (req, res) => {
+  try {
+    const foundFruit = await Fruit.findById(req.params.id);
+    res.status(200).render("fruits/Edit", { fruit: foundFruit });
   } catch (err) {
     res.status(400).send(err);
   }
@@ -90,6 +131,36 @@ app.get("/vegetables/new", (req, res) => {
   res.render("vegetables/New");
 });
 
+// update
+app.put("/vegetables/:id", async (req, res) => {
+  if (req.body.readyToEat === "on") {
+    req.body.readyToEat = true;
+  } else {
+    req.body.readyToEat = false;
+  }
+
+  try {
+    const updatedVegetable = await Fruit.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).redirect(`/vegetables/${req.params.id}`);
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+// delete vegetable
+app.delete("/vegetables/:id", async (req, res) => {
+  try {
+    const deletedVegetable = await Vegetable.findByIdAndDelete(req.params.id);
+    res.status(200).redirect("/vegetables");
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
 app.post("/vegetables", async (req, res) => {
   if (req.body.readyToEat === "on") {
     req.body.readyToEat = true;
@@ -100,6 +171,16 @@ app.post("/vegetables", async (req, res) => {
   try {
     const createdVegetable = await Vegetable.create(req.body);
     res.status(200).redirect("/vegetables");
+  } catch (err) {
+    res.status(400).send(err);
+  }
+});
+
+// edit vegetable
+app.get("/vegetables/:id/edit", async (req, res) => {
+  try {
+    const foundVegetable = await Vegetable.findById(req.params.id);
+    res.status(200).render("vegetables/Edit", { vegetable: foundVegetable });
   } catch (err) {
     res.status(400).send(err);
   }
